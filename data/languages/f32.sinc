@@ -1,0 +1,219 @@
+define alignment=4;
+
+define space IM type=ram_space size=4 default;
+define space DM type=ram_space size=4;
+define space register type=register_space size=4;
+
+define register offset=0 size=8 [
+	r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 r10 r11 r12 r13 r14 r15
+];
+
+define register offset=0x1000 size=4 [
+	pc
+
+	sp  # Dummy stack pointer to make the decompiler work.
+
+	lr  # Dummy link register.
+
+	ctr
+];
+
+define token instr(32)
+	imm2522 = (22, 25)
+	rs2522 = (22, 25)
+	rd2118 = (18, 21)
+	rx1714 = (14, 17)
+
+	simm1500 = (0, 15) signed
+	imm1500 = (0, 15)
+	imm1506 = (6, 15)
+	imm0500 = (0, 5)
+	imm1505 = (5, 15)
+	imm0400 = (0, 4)
+
+	a   = (26, 31)
+	b   = (16, 17)
+	c   = (0, 13)
+;
+
+attach variables [ rs2522 rd2118 rx1714 ] [
+	r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 r10 r11 r12 r13 r14 r15
+];
+
+
+rs: rs2522 is rs2522 { export rs2522; }
+rs: r0 is r0 & rs2522=0 { export 0:8; }
+
+rd: rd2118 is rd2118 { export rd2118; }
+rd: r0 is r0 & rd2118=0 { export 0:8; }
+
+rx: rx1714 is rx1714 { export rx1714; }
+rx: r0 is r0 & rx1714=0 { export 0:8; }
+
+
+define pcodeop btab;
+
+
+:nop is a=0 {}
+
+
+# Register to register
+with : a=0x1f {
+	# Move from register to register. Really just a specialized form of the "add" instruction.
+	:mov rx, rs is c=1 & rd2118=0 & rx & rs { rx = rs; }
+
+	:add    rx, rs, rd is c=1  & rx & rs & rd { rx = rs + rd; }
+	:sub    rx, rs, rd is c=2  & rx & rs & rd { rx = rs - rd; }
+	:lsl    rx, rs, rd is c=4  & rx & rs & rd { rx = rs << rd; }
+	:lsr    rx, rs, rd is c=5  & rx & rs & rd { rx = rs >> rd; }
+	:and    rx, rs, rd is c=9  & rx & rs & rd { rx = rs & rd; }
+	:orr    rx, rs, rd is c=10 & rx & rs & rd { rx = rs | rd; }
+	:eor    rx, rs, rd is c=11 & rx & rs & rd { rx = rs ^ rd; }
+	:seteq  rx, rs, rd is c=12 & rx & rs & rd { rx = zext(rs == rd); }
+	:setne  rx, rs, rd is c=13 & rx & rs & rd { rx = zext(rs != rd); }
+	:setgt  rx, rs, rd is c=14 & rx & rs & rd { rx = zext(rs > rd); }
+	:setge  rx, rs, rd is c=15 & rx & rs & rd { rx = zext(rs >= rd); }
+	:mul    rx, rs, rd is c=16 & rx & rs & rd unimpl
+	:addd   rx, rs, rd is c=17 & rx & rs & rd unimpl
+	:subd   rx, rs, rd is c=18 & rx & rs & rd unimpl
+	:lsld   rx, rs, rd is c=20 & rx & rs & rd unimpl
+	:lsrd   rx, rs, rd is c=21 & rx & rs & rd unimpl
+	:andd   rx, rs, rd is c=25 & rx & rs & rd unimpl
+	:orrd   rx, rs, rd is c=26 & rx & rs & rd unimpl
+	:eord   rx, rs, rd is c=27 & rx & rs & rd unimpl
+	:seteqd rx, rs, rd is c=28 & rx & rs & rd unimpl
+	:setned rx, rs, rd is c=29 & rx & rs & rd unimpl
+	:setgtd rx, rs, rd is c=30 & rx & rs & rd unimpl
+	:setged rx, rs, rd is c=31 & rx & rs & rd unimpl
+}
+
+# Register-immediate (zero extended)
+with : b=0 {
+	# Move from immediate to register. Really just a specialized form of the "add" instruction.
+	:mov rd, #imm1500 is a=1 & rs2522=0 & rd & imm1500 { rd = imm1500; }
+
+	:add    rd, rs, #imm1500 is a=1  & rd & rs & imm1500 { rd = rs + imm1500; }
+	:sub    rd, rs, #imm1500 is a=2  & rd & rs & imm1500 { rd = rs - imm1500; }
+	:lsl    rd, rs, #imm1500 is a=4  & rd & rs & imm1500 { rd = rs << imm1500; }
+	:lsr    rd, rs, #imm1500 is a=5  & rd & rs & imm1500 { rd = rs >> imm1500; }
+	:and    rd, rs, #imm1500 is a=9  & rd & rs & imm1500 { rd = rs & imm1500; }
+	:orr    rd, rs, #imm1500 is a=10 & rd & rs & imm1500 { rd = rs | imm1500; }
+	:eor    rd, rs, #imm1500 is a=11 & rd & rs & imm1500 { rd = rs ^ imm1500; }
+	:seteq  rd, rs, #imm1500 is a=12 & rd & rs & imm1500 { rd = zext(rs == imm1500); }
+	:setne  rd, rs, #imm1500 is a=13 & rd & rs & imm1500 { rd = zext(rs != imm1500); }
+	:setgt  rd, rs, #imm1500 is a=14 & rd & rs & imm1500 { rd = zext(rs > imm1500); }
+	:setge  rd, rs, #imm1500 is a=15 & rd & rs & imm1500 { rd = zext(rs >= imm1500); }
+	:mul    rd, rs, #imm1500 is a=16 & rd & rs & imm1500 unimpl
+	:addd   rd, rs, #imm1500 is a=17 & rd & rs & imm1500 unimpl
+	:subd   rd, rs, #imm1500 is a=18 & rd & rs & imm1500 unimpl
+	:lsld   rd, rs, #imm1500 is a=20 & rd & rs & imm1500 unimpl
+	:lsrd   rd, rs, #imm1500 is a=21 & rd & rs & imm1500 unimpl
+	:andd   rd, rs, #imm1500 is a=25 & rd & rs & imm1500 unimpl
+	:orrd   rd, rs, #imm1500 is a=26 & rd & rs & imm1500 unimpl
+	:eord   rd, rs, #imm1500 is a=27 & rd & rs & imm1500 unimpl
+	:seteqd rd, rs, #imm1500 is a=28 & rd & rs & imm1500 unimpl
+	:setned rd, rs, #imm1500 is a=29 & rd & rs & imm1500 unimpl
+	:setgtd rd, rs, #imm1500 is a=30 & rd & rs & imm1500 unimpl
+	#:setged rd, rs, #imm1500 is a=31 & rd & rs & imm1500 unimpl
+
+	:lsra rd, rs, #imm0400, #imm1505 is a=0x6 & rd & rs & imm0400 & imm1505 unimpl
+	:and rd, rs, #mask is a=0x7 & rd & rs & imm0400 & imm1505 [ mask = (0xffffffff ^ ((0x7ff ^ imm1505) << imm0400)) & 0xffffffff; ] { rd = rs & mask; }
+
+	:mov rd, #immediate is a=0x8 & rs2522=0 & rd & imm0400 & imm1505 [ immediate = imm1505 << imm0400; ] { rd = immediate; }
+	:orr rd, rs, #immediate is a=0x8 & rd & rs & imm0400 & imm1505 [ immediate = imm1505 << imm0400; ] { rd = rs | immediate; }
+
+	:lsrad rd, rs, #imm0500, #imm1506 is a=0x16 & rd & rs & imm0500 & imm1506 unimpl
+	:andd rd, rs, #mask is a=0x17 & rd & rs & imm0500 & imm1506 [ mask = (0xffffffffffffffff ^ ((0x3ff ^ imm1506) << imm0500)) & 0xffffffffffffffff; ] unimpl
+
+	:mov rd, #immediate is a=0x18 & rs2522=0 & rd & imm0500 & imm1506 [ immediate = imm1506 << imm0500; ] { rd = immediate; }
+	:orrd rd, rs, #immediate is a=0x18 & rd & rs & imm0500 & imm1506 [ immediate = imm1506 << imm0500; ] { rd = rs | immediate; }
+}
+
+# Register-immediate (sign extended)
+with : b=1 {
+	# Move from immediate to register. Really just a specialized form of the "add" instruction.
+	:mov rd, #simm1500 is a=1 & rs2522=0 & rd & simm1500 { rd = simm1500; }
+
+	:add  rd, rs, #simm1500 is a=1  & rd & rs & simm1500 { rd = rs + simm1500; }
+	:sub  rd, rs, #simm1500 is a=2  & rd & rs & simm1500 { rd = rs - simm1500; }
+	:and  rd, rs, #simm1500 is a=9  & rd & rs & simm1500 { rd = rs & simm1500; }
+	:orr  rd, rs, #simm1500 is a=10 & rd & rs & simm1500 { rd = rs | simm1500; }
+	:eor  rd, rs, #simm1500 is a=11 & rd & rs & simm1500 { rd = rs ^ simm1500; }
+	:addd rd, rs, #simm1500 is a=17 & rd & rs & simm1500 unimpl
+	:subd rd, rs, #simm1500 is a=18 & rd & rs & simm1500 unimpl
+	:andd rd, rs, #simm1500 is a=25 & rd & rs & simm1500 unimpl
+	:orrd rd, rs, #simm1500 is a=26 & rd & rs & simm1500 unimpl
+	:eord rd, rs, #simm1500 is a=27 & rd & rs & simm1500 unimpl
+}
+
+:b #jump_dest  is a=0x20 & b=0 & rs2522=0 & rd2118=0 & imm1500 [ jump_dest = imm1500 * 4; ] { goto [jump_dest:4]; }
+:b rs          is a=0x21 & b=0 & rd2118=0 & imm1500=0 & rs { local jump_dest = rs * 4; goto [jump_dest:4]; }
+:btab          is a=0x22 & b=0 & rs2522=0 & rd2118=0 & imm1500=0 { local jump_dest:4 = btab(); goto [jump_dest]; }
+:bl #jump_dest is a=0x23 & b=0 & rs2522=0 & rd2118=0 & imm1500 [ jump_dest = imm1500 * 4; ] { call [jump_dest:4]; }
+:ret           is a=0x24 & b=0 & rs2522=0 & rd2118=0 & imm1500=0 { return [lr]; }
+
+:cbz rs, #jump_dest is a=0x25 & b=0 & rd2118=0 & simm1500 & rs [ jump_dest = inst_start + (simm1500 * 4); ] {
+	if !(rs == 0) goto inst_next;
+	goto [jump_dest:4];
+}
+
+:cbnz rs, #jump_dest is a=0x26 & b=0 & rd2118=0 & simm1500 & rs [ jump_dest = inst_start + (simm1500 * 4); ] {
+	if !(rs != 0) goto inst_next;
+	goto [jump_dest:4];
+}
+
+with : a=0x30 & rs2522=0 {
+	:mov rd, #imm1500   is b=0 & rd & imm1500 { rd = imm1500; }
+	:mov rd, #immediate is b=1 & rd & imm1500 [ immediate = imm1500 | 0xffff0000; ] { rd = immediate; }
+	:mov rd, #immediate is b=2 & rd & imm1500 [ immediate = imm1500 << 16; ] { rd = immediate; }
+	:mov rd, #immediate is b=3 & rd & imm1500 [ immediate = (imm1500 << 16) | 0xffff; ] { rd = immediate; }
+}
+
+with : a=0x31 {
+	:ldw rd, [rs, #imm1500]      is b=0 & rs & rd & imm1500 unimpl
+	:ldw rd, "reg["rs, #imm1500] is b=1 & rs & rd & imm1500 unimpl
+	:ldw rd, "mem["rs, #imm1500] is b=2 & rs & rd & imm1500 unimpl
+	:ldw rd, "unk["rs, #imm1500] is b=3 & rs & rd & imm1500 unimpl
+}
+
+with : a=0x32 {
+	:ldd rd, [rs, #imm1500]      is b=0 & rs & rd & imm1500 unimpl
+	:ldd rd, "reg["rs, #imm1500] is b=1 & rs & rd & imm1500 unimpl
+	:ldd rd, "mem["rs, #imm1500] is b=2 & rs & rd & imm1500 unimpl
+	:ldd rd, "unk["rs, #imm1500] is b=3 & rs & rd & imm1500 unimpl
+}
+
+with : a=0x33 {
+	:stw rs, [rd, #imm1500]      is b=0 & rs & rd & imm1500 unimpl
+	:stw rs, "reg["rd, #imm1500] is b=1 & rs & rd & imm1500 unimpl
+	:stw rs, "mem["rd, #imm1500] is b=2 & rs & rd & imm1500 unimpl
+	:stw rs, "unk["rd, #imm1500] is b=3 & rs & rd & imm1500 unimpl
+}
+
+with : a=0x34 {
+	:std rs, [rd, #imm1500]      is b=0 & rs & rd & imm1500 unimpl
+	:std rs, "reg["rd, #imm1500] is b=1 & rs & rd & imm1500 unimpl
+	:std rs, "mem["rd, #imm1500] is b=2 & rs & rd & imm1500 unimpl
+	:std rs, "unk["rd, #imm1500] is b=3 & rs & rd & imm1500 unimpl
+}
+
+with : a=0x35 {
+	:stm rs, [rd, #imm1500]      is b=0 & rs & rd & imm1500 unimpl
+	:stm rs, "reg["rd, #imm1500] is b=1 & rs & rd & imm1500 unimpl
+	:stm rs, "mem["rd, #imm1500] is b=2 & rs & rd & imm1500 unimpl
+	:stm rs, "unk["rd, #imm1500] is b=3 & rs & rd & imm1500 unimpl
+}
+
+with : a=0x36 {
+	:stw #imm2522, [rd, #imm1500]      is b=0 & imm2522 & rd & imm1500 unimpl
+	:stw #imm2522, "reg["rd, #imm1500] is b=1 & imm2522 & rd & imm1500 unimpl
+	:stw #imm2522, "mem["rd, #imm1500] is b=2 & imm2522 & rd & imm1500 unimpl
+	:stw #imm2522, "unk["rd, #imm1500] is b=3 & imm2522 & rd & imm1500 unimpl
+}
+
+with : a=0x37 & imm1500=0 {
+	:pop rd      is b=0 & rs2522=0 & rd unimpl
+	:push rs     is b=1 & rd2118=0 & rs unimpl
+	:mov rd, ctr is b=2 & rs2522=0 & rd & ctr unimpl
+	:mov ctr, rs is b=3 & rd2118=0 & rs & ctr unimpl
+}

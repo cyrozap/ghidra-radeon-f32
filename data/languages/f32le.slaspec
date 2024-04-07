@@ -1,0 +1,3 @@
+define endian=little;
+
+@include "f32.sinc"

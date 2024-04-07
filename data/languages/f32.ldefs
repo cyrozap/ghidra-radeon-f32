@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<language_definitions>
+  <language processor="AMD Radeon F32"
+            endian="little"
+            instructionEndian="big"
+            size="64"
+            variant="default"
+            version="0.1"
+            slafile="f32be.sla"
+            processorspec="f32.pspec"
+            id="F32:BE:64:default">
+    <description>AMD Radeon F32, big endian instructions</description>
+    <compiler name="default" spec="f32.cspec" id="default"/>
+  </language>
+  <language processor="AMD Radeon F32"
+            endian="little"
+            instructionEndian="little"
+            size="64"
+            variant="default"
+            version="0.1"
+            slafile="f32le.sla"
+            processorspec="f32.pspec"
+            id="F32:LE:64:default">
+    <description>AMD Radeon F32, little endian instructions</description>
+    <compiler name="default" spec="f32.cspec" id="default"/>
+  </language>
+</language_definitions>
