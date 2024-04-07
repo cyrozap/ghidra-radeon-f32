@@ -1,5 +1,8 @@
 # AMD Radeon F32 Processor Module for Ghidra
 
+This processor module is meant to decode the ISA of the custom "F32" CPU core
+used for various management tasks in many AMD Radeon GPUs.
+
 Based on the information in [radeon-tools][radeon-tools] and [this
 presentation][33c3].
 
